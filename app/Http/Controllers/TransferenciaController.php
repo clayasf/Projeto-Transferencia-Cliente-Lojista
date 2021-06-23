@@ -16,7 +16,8 @@ class TransferenciaController extends CadastroController
 {
     private $usuario;
     private $empresa;
-    
+    public $model = Transferencia::class;
+
     /**
      * Create a new controller instance.
      *
@@ -25,17 +26,18 @@ class TransferenciaController extends CadastroController
     public function __construct()
     {
         $this->middleware('auth:api', ['except' => ['cadastrarUsuario']]);   
+
     }
 
-    // public function usuarios()
-    // {
-    //    return $this->MostrarTodos($this->model);
-    // }
+     public function transferencias()
+     {
+        return $this->MostrarTodos($this->model);
+     }
 
-    // public function usuario($id)
-    // {                
-    //    return $this->MostrarUm($id, $this->model);
-    // }
+     public function transferencia($id)
+    {                
+       return $this->MostrarUm($id, $this->model);
+    }
     
     public function deposito(Request $request)
     {
