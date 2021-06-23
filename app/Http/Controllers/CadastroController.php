@@ -83,6 +83,7 @@ Abstract class CadastroController extends Controller
     public function Atualizar($id, Request $request, $model, $doc)
     {
         // validação
+        die(print_r('teste',true));
         $this-> validate($request, [
             'password'  =>    'required',
             'email'     =>    'required',
@@ -93,6 +94,7 @@ Abstract class CadastroController extends Controller
         $cadastro->email    = $request->email;
         $cadastro->nome     = $request->usuario;
         $cadastro->password = Hash::make($request->password);
+        $cadastro->saldo     = $request->saldo;
         $cadastro->$doc     = $request->$doc;
 
         $cadastro->save();   

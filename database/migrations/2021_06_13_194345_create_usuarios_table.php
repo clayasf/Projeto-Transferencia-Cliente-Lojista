@@ -20,6 +20,7 @@ class CreateUsuariosTable extends Migration
             $table->string('password');
             $table->string('cpf');
             $table->boolean('verificado')->default('1');
+            $table->decimal('saldo',9,2)->default(0);
             $table->timestamps();
         });
     }

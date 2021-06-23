@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateTransferenciaTable extends Migration
+class CreateTransferenciasTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,8 +13,12 @@ class CreateTransferenciaTable extends Migration
      */
     public function up()
     {
-        Schema::create('transferencia', function (Blueprint $table) {
-            $table->id();
+        Schema::create('transferencias', function (Blueprint $table) {
+            $table->id('transferencia_id');
+            $table->unsignedInteger('payer');
+            $table->foreign('payer')->references('id')->on('usuarios');
+            $table->unsignedInteger('payee');
+            $table->decimal('value',9,2);
             $table->timestamps();
         });
     }

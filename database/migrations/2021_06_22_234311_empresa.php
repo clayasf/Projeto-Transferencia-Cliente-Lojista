@@ -20,6 +20,7 @@ class Empresa extends Migration
             $table->string('password');
             $table->string('cnpj');
             $table->boolean('verificado')->default('1');
+            $table->decimal('saldo',9,2)->default(0);
             $table->timestamps();
         });
     }
