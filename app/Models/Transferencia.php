@@ -14,7 +14,7 @@ use Tymon\JWTAuth\Contracts\JWTSubject;
 class Transferencia extends Model implements AuthenticatableContract, AuthorizableContract, JWTSubject
 {
     use Authenticatable, Authorizable, HasFactory;
-
+    protected $primaryKey = 'transferencia_id';
     /**
      * The attributes that are mass assignable.
      *

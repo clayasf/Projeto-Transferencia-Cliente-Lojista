@@ -17,6 +17,7 @@ class TransferenciaController extends CadastroController
     private $usuario;
     private $empresa;
     public $model = Transferencia::class;
+    private $revert = false;
 
     /**
      * Create a new controller instance.
@@ -34,9 +35,34 @@ class TransferenciaController extends CadastroController
         return $this->MostrarTodos($this->model);
      }
 
-     public function transferencia($id)
+     public function transferencia($transferencia_id)
     {                
-       return $this->MostrarUm($id, $this->model);
+       return $this->MostrarUm($transferencia_id, $this->model);
+    }
+
+    public function reverter($transferencia_id)
+    {
+        
+        try{
+            $aCadastro = array();
+
+            $aCadastro =  $this->MostrarUm($transferencia_id, $this->model)->getData();
+
+            $cadastro = new Transferencia();  
+            
+            $cadastro->payer   = $aCadastro->payee;
+            $cadastro->payee   = $aCadastro->payer;
+            $cadastro->value   = $aCadastro->value;
+
+            $this->revert = true;
+            
+            $this->verificaTransferencia($cadastro);
+            $cadastro->save();
+            
+        }catch(Exception $e){
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+
     }
     
     public function deposito(Request $request)
@@ -126,6 +152,10 @@ class TransferenciaController extends CadastroController
 
        $user = $this->verificaUsuario($request->payer, "Payer");
 
+        if($this->revert)
+        {
+            return $user;
+        }
         if($user->id == $aAuth->id && $user->email == $aAuth->email)
         {
             return $user;
