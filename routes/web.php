@@ -41,13 +41,7 @@ $router->group(['prefix' => 'empresas'], function () use ($router)
 $router->group(['prefix' => 'transferencia'], function () use ($router)
 {
     $router->post('/empresa/deposito', 'transferenciaController@deposito');
-    
     $router->post('/usuario/deposito', 'transferenciaController@deposito');
-
-    $router->get('/','transferenciaController@Empresas') ;
-    $router->get('/{id}','transferenciaController@Empresa') ;
-    $router->put('/atualizar/{id}', 'transferenciaController@atualizarEmpresa');
-    $router->delete('/deletar/{id}', 'transferenciaController@deletarEmpresas');
 
 });
 

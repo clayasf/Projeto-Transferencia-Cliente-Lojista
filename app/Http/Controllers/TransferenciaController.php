@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Exception;
 use JsonException;
 use App\Http\Controllers\AutorizacaoController;
+use App\Models\Usuario;
+use App\Models\Empresa;
 use GuzzleHttp\Client as GuzzleHttpClient;
 use PhpParser\Node\Expr\Cast\Object_;
 use vendor\guzzlehttp\guzzle\src\Client;
@@ -65,21 +67,24 @@ class TransferenciaController extends CadastroController
         $deposito = array();
         $depositante = $this->verificaDepositante($request,"Payer");
         $depositante->valid = 'cpf';
+        $depositante->model = Usuario::class;
 
         if( strripos($request->url(), "/usuario/deposito")){
 
             $deposito        = $this->verificaUsuario($request->payee,"Payee");
             $deposito->valid = 'cpf';
+            $deposito->model = Usuario::class;
         }
         else {
 
             $deposito        = $this->verificaEmpresa($request->payee,"Payee");
             $deposito->valid = 'cnpj';  
+            $deposito->model = Empresa::class;
         }
 
         if($this->verificaSaldo($request,$depositante))
         {
-            $return = $this->atualizarSaldo($deposito,$depositante);
+            $return = $this->atualizarSaldo($deposito,$depositante,$request);
         }
 
         return $return;
@@ -155,28 +160,33 @@ class TransferenciaController extends CadastroController
         
     }
 
-    public function atualizarSaldo($deposito,$depositante)
+    public function atualizarSaldo($deposito,$depositante,$request)
     {
    
         try{
+        
             
-            $deposito->saldo =+ $depositante->saldo;
-            $depositante->saldo = ($depositante->saldo - $depositante->saldo);
-
+            $deposito->saldo    = ($deposito->saldo + $request->value);
+            $depositante->saldo = ($depositante->saldo - $request->value);
+            
+            
            
-            $cadastro = $this->model::find($deposito->id);
-
-            $cadastro->email    = $deposito->email;
-            $cadastro->nome     = $deposito->usuario;
-            $cadastro->password = Hash::make('1234');
-            $cadastro->saldo     = $deposito->saldo;
-    
-            $cadastro->save();  
-            die(print_r($cadastro,true));
-            $this->Atualizar($deposito->id    ,$deposito,   $this->model,   $deposito->valid);
-            $this->Atualizar($depositante->id,$depositante, $this->model,   $depositante->valid);
+            $credito = $deposito->model::find($deposito->id);
+            
+            $credito->email     = $deposito->email;
+            $credito->nome      = $deposito->nome;
+            $credito->saldo     = $deposito->saldo;
+            $credito->save();  
+            
+            $debito = $depositante->model::find($depositante->id);
+            
+            $debito->email     = $depositante->email;
+            $debito->nome      = $depositante->nome;
+            $debito->saldo     = $depositante->saldo;
+            $debito->save();  
             
             return true;
+
         }catch( Exception $e)
         {
             return response()->json(['error' => $e->getMessage()], 500);
