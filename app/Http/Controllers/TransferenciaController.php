@@ -40,28 +40,35 @@ class TransferenciaController extends CadastroController
        return $this->MostrarUm($transferencia_id, $this->model);
     }
 
-    public function reverter($transferencia_id)
+    public function reverter(Request $request)
     {
         
         try{
-            $aCadastro = array();
 
-            $aCadastro =  $this->MostrarUm($transferencia_id, $this->model)->getData();
-
-            $cadastro = new Transferencia();  
+            $transferencia = Transferencia::find($request->transferencia_id);      
             
-            $cadastro->payer   = $aCadastro->payee;
-            $cadastro->payee   = $aCadastro->payer;
-            $cadastro->value   = $aCadastro->value;
+            $cadastroDeposito       = Usuario::find($transferencia->payee);
+            $cadastroDeposito->valid = 'cpf';
+            $cadastroDeposito->model = Usuario::class;   
 
-            $this->revert = true;
+            $cadastroDepositante    = Usuario::find($transferencia->payer); 
+            $cadastroDepositante->valid = 'cpf';
+            $cadastroDepositante->model = Usuario::class; 
+
+            $this->atualizarSaldo($cadastroDeposito,$cadastroDepositante,$transferencia);
+
+            $cadastro = new Transferencia();            
             
-            $this->verificaTransferencia($cadastro);
+            $cadastro->payer    = $transferencia->payee;
+            $cadastro->payee    = $transferencia->payer;
+            $cadastro->value    = $transferencia->value;
             $cadastro->save();
-            
+
         }catch(Exception $e){
             return response()->json(['error' => $e->getMessage()], 500);
         }
+
+        return response()->json($cadastro,201);
 
     }
     
@@ -125,7 +132,7 @@ class TransferenciaController extends CadastroController
         if($depositante->saldo < $request->value){
             return throw new JsonException('Payer não possui saldo para essa transação!', 500);
         }else{
-            if($this->autorizaTransacao('https://run.mocky.io/v3/8fafdd68-a090-496f-8c9a-3442cf30dae6') == 200){
+            if($this->autorizaTransacao('https://run.mocky.io/v3/5a93a28d-38af-4ddf-afe3-adc695a5a0e4') == 200){
                return true;
             }
             else{
@@ -137,7 +144,8 @@ class TransferenciaController extends CadastroController
     public function autorizaTransacao($uri)
     {
         try{
-            $client = new GuzzleHttpClient(['base_uri' => $uri]);
+            // certificado desativado para testes
+            $client = new GuzzleHttpClient(['base_uri' => $uri,'verify' => false,]);
             $response = $client->request('GET');
         }catch(JsonException $e){
             return response()->json(['error' => "Erro ao comunicar com serviço externo!"], 500);
@@ -145,6 +153,18 @@ class TransferenciaController extends CadastroController
         return $response->getStatusCode();
     }
 
+    /**
+     * Verifica se o Depositante tem autorização para realizar a transação.
+     * Se o token estiver válido e o id do depositante for igual ao id
+     * do usuário logado, retorna o objeto Depositante.
+     * Caso contrário, lança uma exceção JsonException com código 401.
+     *
+     * @param Request $request
+     *
+     * @return \Illuminate\Http\JsonResponse
+     *
+     * @throws \App\Exceptions\JsonException
+     */
     public function verificaDepositante($request)
     {
         $oAuth  = new AutorizacaoController();
@@ -197,7 +217,7 @@ class TransferenciaController extends CadastroController
    
         try{
         
-            
+                
             $deposito->saldo    = ($deposito->saldo + $request->value);
             $depositante->saldo = ($depositante->saldo - $request->value);
             

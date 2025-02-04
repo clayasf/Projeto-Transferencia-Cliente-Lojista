@@ -1,13 +1,18 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Models\Usuario;
 use Illuminate\Http\Request;
 use Tymon\JWTAuth\JWTAuth;
 use illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\hash;
-
+DB::listen(function ($query) {
+    Log::info('SQL Query: '.$query->sql);
+    Log::info('Bindings: '.json_encode($query->bindings));
+    Log::info('Time: '.$query->time.' ms');
+});
 class AutorizacaoController extends Controller
 {
 
@@ -23,13 +28,18 @@ class AutorizacaoController extends Controller
 
     public function login(Request $request)
     {
-        $credentials = $request->only('email','password');
+        
+        $credentials = $request->only('email', 'password');
 
-        if (! $token = Auth::attempt($credentials)) {
+        if (!$token = Auth::guard('api')->attempt($credentials)) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
-        return $this->respondWithToken($token);
+        return response()->json([
+            'access_token' => $token,
+            'token_type' => 'bearer',
+            'expires_in' => auth('api')->factory()->getTTL() * 60
+        ]);
     }
 
     /**

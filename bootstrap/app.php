@@ -27,6 +27,11 @@ $app = new Laravel\Lumen\Application(
 
  $app->withEloquent();
 
+ $app->configure('jwt');
+ $app->register(App\Providers\AuthServiceProvider::class);
+$app->register(Tymon\JWTAuth\Providers\LumenServiceProvider::class);
+$app->configure('auth');
+
 /*
 |--------------------------------------------------------------------------
 | Register Container Bindings
